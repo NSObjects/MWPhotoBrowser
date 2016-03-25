@@ -15,7 +15,6 @@
 // yourself then you can simply ensure your custom data model
 // conforms to MWPhotoProtocol
 @interface MWPhoto : NSObject <MWPhoto>
-
 @property (nonatomic, strong) NSString *caption;
 @property (nonatomic, strong) NSURL *videoURL;
 @property (nonatomic) BOOL emptyImage;

@@ -20,7 +20,6 @@
     PHImageRequestID _assetRequestID;
         
 }
-
 @property (nonatomic, strong) UIImage *image;
 @property (nonatomic, strong) NSURL *photoURL;
 @property (nonatomic, strong) PHAsset *asset;
@@ -142,6 +141,7 @@
     @finally {
     }
 }
+
 
 // Set the underlyingImage
 - (void)performLoadUnderlyingImageAndNotify {

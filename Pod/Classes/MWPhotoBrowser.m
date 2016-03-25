@@ -64,7 +64,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _previousLayoutBounds = CGRectZero;
     _currentPageIndex = 0;
     _previousPageIndex = NSUIntegerMax;
-    _displayActionButton = YES;
+    _displayActionButton = NO;
     _displayNavArrows = NO;
     _zoomPhotosToFill = YES;
     _performingLayout = NO; // Reset on view did appear
@@ -176,7 +176,12 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         _nextButton = [[UIBarButtonItem alloc] initWithImage:nextButtonImage style:UIBarButtonItemStylePlain target:self action:@selector(gotoNextPage)];
     }
     if (self.displayActionButton) {
-        _actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonPressed:)];
+        UIButton* button= [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 44, 44)];
+        [button setTitle:@"删除" forState:UIControlStateNormal];
+        [button setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+        [button addTarget:self action:@selector(actionButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+        
+        _actionButton = [[UIBarButtonItem alloc]initWithCustomView:button];
     }
     
     // Update
@@ -188,7 +193,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         swipeGesture.direction = UISwipeGestureRecognizerDirectionDown | UISwipeGestureRecognizerDirectionUp;
         [self.view addGestureRecognizer:swipeGesture];
     }
-    
+    //self.imageMaxNum = 1;
 	// Super
     [super viewDidLoad];
 	
@@ -547,7 +552,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     return YES;
 }
 
-- (NSUInteger)supportedInterfaceOrientations {
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     return UIInterfaceOrientationMaskAll;
 }
 
@@ -1539,6 +1544,38 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
                 return;
             }
         }
+        
+        NSInteger selectCount = 0;
+        NSMutableArray *selectedImage = [NSMutableArray array];
+        
+        for (NSInteger index = 0; index < [_thumbPhotos count]; index++) {
+            BOOL select = [self.delegate photoBrowser:self isPhotoSelectedAtIndex:index];
+            if (select) {
+                MWPhoto *photo = _thumbPhotos[index];
+                if ([photo isKindOfClass:[MWPhoto class]] && photo.underlyingImage) {
+                    [selectedImage addObject:photo.underlyingImage];
+                }
+                 selectCount++;
+            }
+        }
+        
+        if (self.imageMaxNum && selectCount > self.imageMaxNum) {
+            NSString *msg = [NSString stringWithFormat:@"最多只能添加%@张图片",@(self.imageMaxNum)];
+            
+            [[[UIAlertView alloc]initWithTitle:@"提示"
+                                       message:msg
+                                      delegate:nil
+                             cancelButtonTitle:@"确定"
+                             otherButtonTitles:nil,
+              nil] show];
+            return;
+        }
+        
+        if ([self.delegate respondsToSelector:@selector(photoBrowserDidSelectedPhotos:)]) {
+            [self.delegate photoBrowserDidSelectedPhotos:selectedImage];
+        }
+        
+     
         // Dismiss view controller
         if ([_delegate respondsToSelector:@selector(photoBrowserDidFinishModalPresentation:)]) {
             // Call delegate method and let them dismiss us
@@ -1548,6 +1585,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         }
     }
 }
+
+
 
 #pragma mark - Actions
 
